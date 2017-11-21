@@ -30,7 +30,7 @@ struct node
 	int nodeNumber;
 	string type;
 	int value;
-}temp;
+}temp,rest;
 struct state
 {
 	int money;
@@ -63,15 +63,20 @@ state moneyAfter(state st, node el)
 		st.money -= el.value;
 	}
 	else
-	{
-		st.money += el.value;
-	}
+		if(el.type=="moneda")
+		{
+			st.money += el.value;
+		}
+		else
+		{
+			st.money -= el.value;
+		}
 	return st;
 }
 void navigate(state st)
 {
 	int nr;
-	cout << "Acum ai " << st.money << " lei.\n Posibilitatile tale sunt:\n";
+	cout << "Acum ai " << st.money << " lei.\nPosibilitatile tale sunt:\n";
 	for (auto it = possibleStates[st.money].begin(); it != possibleStates[st.money].end(); it++)
 	{
 		cout << (*it).posibilitate;
@@ -123,6 +128,12 @@ int main()
 					if (visitedStates[moneyAfter(st, *it).money] == 0)
 						states.push_back(moneyAfter(st, *it));
 				}
+			}
+			if (st.money != 0)
+			{
+				rest.value = st.money;
+				rest.posibilitate = "Puteti primi inapoi " + to_string(st.money) + " rest.\n";
+				possibleStates[st.money].push_back(rest);
 			}
 		}
 		visitedStates[st.money] = 1;
