@@ -34,43 +34,45 @@ class State
 		int getTokens() { return nrTokens; }
 };
 
-class transition
+class Transition
 {
 private:
-	string label;
+	string type;
 public:
-	vector< pair<State*, int> > in_states, out_states;
-	transition(string label)
+	vector< pair<State*, int> > in, out;
+
+	Transition(string str)
 	{
-		this->label = label;
+		type = str;
 	}
-	void add_edge_in(State &in, int weight)
+	void addEdgeIn(State &edge, int tokens)
 	{
-		in_states.push_back(make_pair(&in, weight));
+		in.push_back(make_pair(&edge, tokens));
 	}
-	void add_edge_out(State &out, int weight)
+
+	void addEdgeOut(State &edge, int tokens)
 	{
-		out_states.push_back(make_pair(&out, weight));
+		out.push_back(make_pair(&edge, tokens));
 	}
 	void fire_in()
 	{
-		for (int i = 0; i<in_states.size(); ++i)
+		for (int i = 0; i<in.size(); ++i)
 		{
-			in_states[i].first->changeTokens(in_states[i].first->getTokens() - in_states[i].second);
+			in[i].first->changeTokens(in[i].first->getTokens() - in[i].second);
 		}
-		cout << "Transition " + label + " has fired!\n";
+		cout << "Transition " + type + " has been activated\n";
 	}
 	void fire_out()
 	{
-		for (int i = 0; i<out_states.size(); ++i)
+		for (int i = 0; i<out.size(); ++i)
 		{
-			out_states[i].first->changeTokens(out_states[i].first->getTokens() + out_states[i].second);
+			out[i].first->changeTokens(out[i].first->getTokens() + out[i].second);
 		}
 	}
 	bool can_fire()
 	{
-		for (int i = 0; i<in_states.size(); ++i)
-			if (in_states[i].first->getTokens() < in_states[i].second)
+		for (int i = 0; i<in.size(); ++i)
+			if (in[i].first->getTokens() < in[i].second)
 				return false;
 		return true;
 	}
@@ -81,48 +83,49 @@ class PetriNetwork
 
 private:
 	vector<State> states;
-	vector<transition> transitions;
+	vector<Transition> transitions;
 public:
 
 	PetriNetwork() {};
 
-	void create_petri_net()
+	void createNetwork()
 	{
+
 		const int PROD = 0, CONS = 1, PROD_READY = 2, DATA_READY = 3, FILL_POS = 4, FREE_POS = 5, MUTEX = 6;
 
 		for (int i = 0; i<7; ++i)
 			states.push_back(State(0));
 
-		transition prod("PRODUCE");
-		prod.add_edge_in(states[PROD], 1);
-		prod.add_edge_out(states[PROD_READY], 1);
+		Transition prod("PRODUCE");
+		prod.addEdgeIn(states[PROD], 1);
+		prod.addEdgeOut(states[PROD_READY], 1);
 
 		transitions.push_back(prod);
 
-		transition cons("CONSUME");
-		cons.add_edge_in(states[DATA_READY], 1);
-		cons.add_edge_out(states[CONS], 1);
+		Transition cons("CONSUME");
+		cons.addEdgeIn(states[DATA_READY], 1);
+		cons.addEdgeOut(states[CONS], 1);
 
 		transitions.push_back(cons);
 
-		transition push("PUSH");
-		push.add_edge_in(states[PROD_READY], 1);
-		push.add_edge_in(states[FREE_POS], 1);
-		push.add_edge_in(states[MUTEX], 1);
-		push.add_edge_out(states[FILL_POS], 1);
-		push.add_edge_out(states[MUTEX], 1);
-		push.add_edge_out(states[PROD], 1);
+		Transition push("PUSH");
+		push.addEdgeIn(states[PROD_READY], 1);
+		push.addEdgeIn(states[FREE_POS], 1);
+		push.addEdgeIn(states[MUTEX], 1);
+		push.addEdgeOut(states[FILL_POS], 1);
+		push.addEdgeOut(states[MUTEX], 1);
+		push.addEdgeOut(states[PROD], 1);
 
 		transitions.push_back(push);
 
 
-		transition pop("POP");
-		pop.add_edge_in(states[MUTEX], 1);
-		pop.add_edge_in(states[FILL_POS], 1);
-		pop.add_edge_in(states[CONS], 1);
-		pop.add_edge_out(states[FREE_POS], 1);
-		pop.add_edge_out(states[MUTEX], 1);
-		pop.add_edge_out(states[DATA_READY], 1);
+		Transition pop("POP");
+		pop.addEdgeIn(states[MUTEX], 1);
+		pop.addEdgeIn(states[FILL_POS], 1);
+		pop.addEdgeIn(states[CONS], 1);
+		pop.addEdgeOut(states[FREE_POS], 1);
+		pop.addEdgeOut(states[MUTEX], 1);
+		pop.addEdgeOut(states[DATA_READY], 1);
 
 		transitions.push_back(pop);
 
@@ -135,13 +138,13 @@ public:
 
 	void simulate()
 	{
-		int i = 1;
-		for (;; i++)
+		int round=0;
+		while(true)
 		{
-			cout << "Cycle " << i << '\n';
-
-			vector<transition> vec;
-			vector<transition> fired;
+			round++;
+			cout << "Round " << round << '\n';
+			vector<Transition> vec;
+			vector<Transition> fired;
 			for (int j = 0; j<transitions.size(); ++j)
 				if (transitions[j].can_fire())
 					vec.push_back(transitions[j]);
@@ -171,7 +174,7 @@ int main()
 	//ifstream f("file.in");
 	//ofstream g("file.out");
 	PetriNetwork petri;
-	petri.create_petri_net();
+	petri.createNetwork();
 	petri.simulate();
 	return 0;
 }
